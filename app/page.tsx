@@ -44,10 +44,20 @@ export default function Home() {
       audio.pause();
       setIsPlaying(false);
     } else {
-      const a = new Audio(STREAM_URL);
-      a.play();
-      setAudio(a);
-      setIsPlaying(true);
+      const a = audio || new Audio(STREAM_URL);
+      a.onerror = () => {
+        setIsPlaying(false);
+        setAudio(null);
+      };
+      a.play()
+        .then(() => {
+          setAudio(a);
+          setIsPlaying(true);
+        })
+        .catch(() => {
+          setIsPlaying(false);
+          setAudio(null);
+        });
     }
   };
 
