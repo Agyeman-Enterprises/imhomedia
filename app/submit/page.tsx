@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 type FormData = {
   artistName: string;
@@ -64,8 +65,8 @@ export default function SubmitPage() {
       <div className="relative min-h-screen flex flex-col items-center justify-center px-6">
         {/* Background */}
         <div className="pointer-events-none fixed inset-0 z-0">
-          <div className="absolute -top-1/2 -left-1/4 h-[120vh] w-[80vw] rounded-full bg-purple-900/20 blur-[120px]" />
-          <div className="absolute -bottom-1/3 -right-1/4 h-[100vh] w-[70vw] rounded-full bg-red-900/15 blur-[100px]" />
+          <div className="absolute -top-1/2 -left-1/4 h-[120vh] w-[80vw] rounded-full bg-red-900/15 blur-[120px]" />
+          <div className="absolute -bottom-1/3 -right-1/4 h-[100vh] w-[70vw] rounded-full bg-[#c9a84c]/8 blur-[100px]" />
         </div>
 
         <div className="relative z-10 max-w-lg text-center">
@@ -74,17 +75,17 @@ export default function SubmitPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-4xl font-black">Track Submitted!</h1>
+          <h1 className="text-4xl font-black font-[family-name:var(--font-raleway)]">Track Submitted!</h1>
           <p className="mt-4 text-lg text-white/60">
             Thanks for submitting <span className="font-semibold text-white">{form.trackTitle}</span>!
-            We&apos;ll review your track and notify you within <span className="font-semibold text-purple-400">48 hours</span> if selected for rotation.
+            We&apos;ll review your track and notify you within <span className="font-semibold text-[#c9a84c]">48 hours</span> if selected for rotation.
           </p>
           <p className="mt-6 text-white/40">
             If your track makes it in, you&apos;ll get social media templates to share with your audience.
           </p>
           <Link
             href="/"
-            className="mt-8 inline-block rounded-full bg-gradient-to-r from-purple-600 to-red-600 px-8 py-3 font-bold transition-all hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25"
+            className="mt-8 inline-block rounded-full bg-gradient-to-r from-[#c9a84c] to-[#dc2626] px-8 py-3 font-bold text-black transition-all hover:scale-105 hover:shadow-lg hover:shadow-[#c9a84c]/25"
           >
             Back to IMHO Radio
           </Link>
@@ -97,23 +98,27 @@ export default function SubmitPage() {
     <div className="relative min-h-screen">
       {/* Background */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute -top-1/2 -left-1/4 h-[120vh] w-[80vw] rounded-full bg-purple-900/20 blur-[120px]" />
-        <div className="absolute -bottom-1/3 -right-1/4 h-[100vh] w-[70vw] rounded-full bg-red-900/15 blur-[100px]" />
+        <div className="absolute -top-1/2 -left-1/4 h-[120vh] w-[80vw] rounded-full bg-red-900/15 blur-[120px]" />
+        <div className="absolute -bottom-1/3 -right-1/4 h-[100vh] w-[70vw] rounded-full bg-[#c9a84c]/8 blur-[100px]" />
       </div>
 
       {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-6 py-5 md:px-12">
+      <nav className="relative z-10 flex items-center justify-between px-6 py-4 md:px-12">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-600 to-red-600">
-            <span className="text-lg font-black">IM</span>
-          </div>
-          <span className="text-lg font-bold tracking-tight">
-            IMHO<span className="text-purple-400"> Media</span>
+          <Image
+            src="/imho-logo-nav.jpg"
+            alt="IMHO Media"
+            width={44}
+            height={26}
+            className="rounded"
+          />
+          <span className="text-lg font-bold tracking-tight font-[family-name:var(--font-raleway)]">
+            IMHO<span className="text-[#c9a84c]"> Media</span>
           </span>
         </Link>
         <Link
           href="/"
-          className="rounded-full border border-white/10 px-5 py-2 text-sm font-semibold transition hover:border-white/20 hover:text-white"
+          className="rounded-full border border-[#c9a84c]/20 px-5 py-2 text-sm font-semibold text-[#e8d5a8]/70 transition hover:border-[#c9a84c]/40 hover:text-[#e8d5a8]"
         >
           Back to Radio
         </Link>
@@ -122,8 +127,8 @@ export default function SubmitPage() {
       {/* Form */}
       <div className="relative z-10 mx-auto max-w-2xl px-6 py-16">
         <div className="text-center">
-          <h1 className="text-4xl font-black md:text-5xl">
-            <span className="bg-gradient-to-r from-purple-400 via-red-400 to-orange-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-black md:text-5xl font-[family-name:var(--font-raleway)]">
+            <span className="bg-gradient-to-r from-[#c9a84c] via-[#dc2626] to-[#c9a84c] bg-clip-text text-transparent">
               Bring Your Own Music
             </span>
           </h1>
@@ -146,7 +151,7 @@ export default function SubmitPage() {
               value={form.artistName}
               onChange={update("artistName")}
               placeholder="e.g. DJ Mixtape, The Fusion Collective"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-white placeholder-white/25 outline-none transition focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
+              className="w-full rounded-xl border border-[#c9a84c]/15 bg-white/[0.04] px-5 py-3.5 text-white placeholder-white/25 outline-none transition focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/25"
             />
           </div>
 
@@ -162,7 +167,7 @@ export default function SubmitPage() {
               value={form.trackTitle}
               onChange={update("trackTitle")}
               placeholder="e.g. Sunset in Lagos"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-white placeholder-white/25 outline-none transition focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
+              className="w-full rounded-xl border border-[#c9a84c]/15 bg-white/[0.04] px-5 py-3.5 text-white placeholder-white/25 outline-none transition focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/25"
             />
           </div>
 
@@ -176,7 +181,7 @@ export default function SubmitPage() {
               required
               value={form.genre}
               onChange={update("genre")}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-white outline-none transition focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25 [&>option]:bg-[#0a0a0f]"
+              className="w-full rounded-xl border border-[#c9a84c]/15 bg-white/[0.04] px-5 py-3.5 text-white outline-none transition focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/25 [&>option]:bg-[#0a0a0f]"
             >
               <option value="" disabled>Select a genre</option>
               {GENRES.map((g) => (
@@ -197,7 +202,7 @@ export default function SubmitPage() {
               value={form.trackLink}
               onChange={update("trackLink")}
               placeholder="https://soundcloud.com/your-track or Dropbox link"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-white placeholder-white/25 outline-none transition focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
+              className="w-full rounded-xl border border-[#c9a84c]/15 bg-white/[0.04] px-5 py-3.5 text-white placeholder-white/25 outline-none transition focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/25"
             />
           </div>
 
@@ -213,14 +218,14 @@ export default function SubmitPage() {
               value={form.email}
               onChange={update("email")}
               placeholder="you@email.com"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-white placeholder-white/25 outline-none transition focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
+              className="w-full rounded-xl border border-[#c9a84c]/15 bg-white/[0.04] px-5 py-3.5 text-white placeholder-white/25 outline-none transition focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/25"
             />
           </div>
 
           {/* Info box */}
-          <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-5">
+          <div className="rounded-xl border border-[#c9a84c]/20 bg-[#c9a84c]/5 p-5">
             <p className="text-sm text-white/50">
-              <span className="font-semibold text-purple-400">How it works:</span>{" "}
+              <span className="font-semibold text-[#c9a84c]">How it works:</span>{" "}
               We review every submission. If your track fits the Mixed Heritage Beats vibe,
               we&apos;ll add it to rotation and email you social media templates to share.
               Review takes up to 48 hours.
@@ -231,7 +236,7 @@ export default function SubmitPage() {
           <button
             type="submit"
             disabled={sending}
-            className="w-full rounded-xl bg-gradient-to-r from-purple-600 via-violet-600 to-red-600 py-4 text-lg font-bold transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:hover:scale-100"
+            className="w-full rounded-xl bg-gradient-to-r from-[#c9a84c] via-[#dc2626] to-[#c9a84c] py-4 text-lg font-bold text-black transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-[#c9a84c]/25 disabled:opacity-50 disabled:hover:scale-100"
           >
             {sending ? "Submitting..." : "Submit Your Track"}
           </button>
@@ -239,9 +244,9 @@ export default function SubmitPage() {
       </div>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 px-6 py-8 text-center">
+      <footer className="relative z-10 border-t border-[#c9a84c]/10 px-6 py-8 text-center">
         <p className="text-sm text-white/30">
-          Powered by <a href="https://wavcraft.vercel.app" target="_blank" className="font-semibold text-purple-400 hover:text-purple-300">WavCraft AI</a> (beta)
+          Powered by <a href="https://wavcraft.vercel.app" target="_blank" className="font-semibold text-[#c9a84c] hover:text-[#e8d5a8]">WavCraft AI</a> (beta)
         </p>
       </footer>
     </div>
