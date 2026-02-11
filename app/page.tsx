@@ -352,20 +352,13 @@ export default function Home() {
               get a track. It&apos;s that simple. Built for indie game devs, content
               creators, and anyone who thinks music should be free.
             </p>
-            <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <div className="mt-8">
               <a
                 href="https://wavcraft.vercel.app"
                 target="_blank"
-                className="rounded-full bg-gradient-to-r from-[#c9a84c] to-[#dc2626] px-8 py-3 font-bold text-black transition-all hover:scale-105 hover:shadow-lg hover:shadow-[#c9a84c]/25"
+                className="inline-block rounded-full bg-gradient-to-r from-[#c9a84c] to-[#dc2626] px-8 py-3 font-bold text-black transition-all hover:scale-105 hover:shadow-lg hover:shadow-[#c9a84c]/25"
               >
                 Try WavCraft Free
-              </a>
-              <a
-                href="https://github.com/Agyeman-Enterprises/wavcraft"
-                target="_blank"
-                className="rounded-full border border-[#c9a84c]/20 px-8 py-3 font-semibold text-[#e8d5a8]/70 transition hover:border-[#c9a84c]/40 hover:text-[#e8d5a8]"
-              >
-                View Source
               </a>
             </div>
           </div>
