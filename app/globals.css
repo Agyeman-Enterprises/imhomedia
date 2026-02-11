@@ -3,7 +3,11 @@
 @theme inline {
   --color-background: #0a0a0f;
   --color-foreground: #f0f0f0;
-  --font-sans: var(--font-inter);
+  --color-gold: #c9a84c;
+  --color-gold-light: #e8d5a8;
+  --color-gold-dark: #8a6f2e;
+  --font-sans: var(--font-rubik);
+  --font-heading: var(--font-raleway);
 }
 
 body {
@@ -12,10 +16,14 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), system-ui, sans-serif;
+}
+
 /* Glow pulse animation for the live badge */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
-  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); }
+  0%, 100% { box-shadow: 0 0 8px rgba(201, 168, 76, 0.6); }
+  50% { box-shadow: 0 0 24px rgba(201, 168, 76, 0.9); }
 }
 
 @keyframes float {
@@ -30,6 +38,11 @@ body {
   75% { height: 20px; }
 }
 
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
@@ -42,12 +55,16 @@ body {
   animation: waveform 1.2s ease-in-out infinite;
 }
 
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — gold accent */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -55,6 +72,6 @@ html {
   background: #0a0a0f;
 }
 ::-webkit-scrollbar-thumb {
-  background: #8b5cf6;
+  background: #c9a84c;
   border-radius: 3px;
 }

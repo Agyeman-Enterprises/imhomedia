@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Raleway, Rubik } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const raleway = Raleway({ subsets: ["latin"], variable: "--font-raleway" });
+const rubik = Rubik({ subsets: ["latin"], variable: "--font-rubik" });
 
 export const metadata: Metadata = {
-  title: "IMHO Media | Unfiltered. Unbothered. Unapologetically Us.",
+  title: "IMHO Media | S'Truth. Just Saying!",
   description:
     "The world's first all-AI music radio station. Mixed Heritage Beats — where Afrobeats meets Jazz meets Gospel meets whatever the AI feels like.",
   openGraph: {
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
     url: "https://imho.media",
     siteName: "IMHO Media",
     type: "website",
+    images: [{ url: "/og-image.jpg", width: 1048, height: 630 }],
   },
 };
 
@@ -29,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${raleway.variable} ${rubik.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );
