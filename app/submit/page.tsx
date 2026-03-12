@@ -69,7 +69,7 @@ export default function SubmitPage() {
           <div className="absolute -bottom-1/3 -right-1/4 h-[100vh] w-[70vw] rounded-full bg-[#c9a84c]/8 blur-[100px]" />
         </div>
 
-        <div className="relative z-10 max-w-lg text-center">
+        <div className="relative z-10 max-w-lg text-center" data-testid="success-toast">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600">
             <svg className="h-10 w-10" fill="none" stroke="white" strokeWidth={3} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -138,7 +138,7 @@ export default function SubmitPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-12 space-y-6">
+        <form onSubmit={handleSubmit} data-testid="submit-form" className="mt-12 space-y-6">
           {/* Artist Name */}
           <div>
             <label htmlFor="artistName" className="mb-2 block text-sm font-semibold text-white/70">
@@ -236,6 +236,7 @@ export default function SubmitPage() {
           <button
             type="submit"
             disabled={sending}
+            data-testid="submit-btn"
             className="w-full rounded-xl bg-gradient-to-r from-[#c9a84c] via-[#dc2626] to-[#c9a84c] py-4 text-lg font-bold text-black transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-[#c9a84c]/25 disabled:opacity-50 disabled:hover:scale-100"
           >
             {sending ? "Submitting..." : "Submit Your Track"}

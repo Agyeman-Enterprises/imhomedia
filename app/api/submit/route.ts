@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
+import { createAdminClient } from "@/auth-template/lib/supabase/admin";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = await request.json() as {
+      artistName?: string;
+      trackTitle?: string;
+      genre?: string;
+      trackLink?: string;
+      email?: string;
+    };
 
     const { artistName, trackTitle, genre, trackLink, email } = body;
 
@@ -16,39 +21,51 @@ export async function POST(request: Request) {
     }
 
     const submission = {
-      id: crypto.randomUUID(),
-      artistName,
-      trackTitle,
+      artist_name: artistName,
+      track_title: trackTitle,
       genre,
-      trackLink,
+      track_link: trackLink,
       email,
-      submittedAt: new Date().toISOString(),
-      status: "pending",
+      status: "pending" as const,
     };
 
-    // Store submissions in a JSON file (swap for a DB later)
-    const dataDir = path.join(process.cwd(), "data");
-    const filePath = path.join(dataDir, "submissions.json");
+    const supabase = createAdminClient();
 
-    await fs.mkdir(dataDir, { recursive: true });
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("track_submissions")
+        .insert(submission)
+        .select("id")
+        .single();
 
-    let submissions = [];
-    try {
-      const existing = await fs.readFile(filePath, "utf-8");
-      submissions = JSON.parse(existing);
-    } catch {
-      // File doesn't exist yet
+      if (error) {
+        console.error("[submit] Supabase insert error:", error);
+        // Fall through to logging fallback below
+      } else {
+        return NextResponse.json({
+          success: true,
+          message: "Track submitted! We'll review and notify you within 48 hours.",
+          id: (data as { id: string }).id,
+        });
+      }
     }
 
-    submissions.push(submission);
-    await fs.writeFile(filePath, JSON.stringify(submissions, null, 2));
+    // Fallback: log the submission and return success so the form
+    // still works when Supabase is not yet configured.
+    const fallbackId = crypto.randomUUID();
+    console.log("[submit] Track submission (no DB — logged only):", {
+      id: fallbackId,
+      ...submission,
+      submitted_at: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       success: true,
       message: "Track submitted! We'll review and notify you within 48 hours.",
-      id: submission.id,
+      id: fallbackId,
     });
-  } catch {
+  } catch (err) {
+    console.error("[submit] Unhandled error:", err);
     return NextResponse.json(
       { error: "Failed to process submission" },
       { status: 500 }

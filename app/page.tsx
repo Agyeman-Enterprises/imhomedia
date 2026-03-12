@@ -45,6 +45,7 @@ export default function Home() {
       setIsPlaying(false);
     } else {
       const a = audio || new Audio(STREAM_URL);
+      // eslint-disable-next-line react-hooks/immutability
       a.onerror = () => {
         setIsPlaying(false);
         setAudio(null);
@@ -62,7 +63,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden" data-testid="app-root">
       {/* Animated background — Jungkir-inspired red blobs + dark navy */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div
@@ -94,11 +95,13 @@ export default function Home() {
           <a href="#listen" className="transition hover:text-[#c9a84c]">Listen</a>
           <a href="#about" className="transition hover:text-[#c9a84c]">About</a>
           <a href="#genres" className="transition hover:text-[#c9a84c]">Genres</a>
+          <a href="#podcasts" className="transition hover:text-[#c9a84c]">Podcasts</a>
           <a href="/submit" className="transition hover:text-[#c9a84c]">Submit Your Track</a>
           <a href="https://wavcraft.vercel.app" target="_blank" className="transition hover:text-[#c9a84c]">WavCraft</a>
         </div>
         <button
           onClick={togglePlay}
+          data-testid="play-pause-btn"
           className="rounded-full bg-gradient-to-r from-[#c9a84c] to-[#dc2626] px-5 py-2 text-sm font-semibold text-black transition-all hover:scale-105 hover:shadow-lg hover:shadow-[#c9a84c]/25"
         >
           {isPlaying ? "Pause" : "Listen Now"}
@@ -144,6 +147,7 @@ export default function Home() {
         <button
           onClick={togglePlay}
           id="listen"
+          data-testid="hero-play-btn"
           className="group mt-10 flex items-center gap-4 rounded-full bg-gradient-to-r from-[#c9a84c] via-[#dc2626] to-[#c9a84c] px-8 py-4 text-lg font-bold text-black transition-all hover:scale-105 hover:shadow-2xl hover:shadow-[#c9a84c]/30"
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/20 backdrop-blur-sm transition group-hover:bg-black/30">
@@ -268,6 +272,101 @@ export default function Home() {
           Inspired by Marvin Gaye, Bob Marley, Dave Brubeck, Fela Kuti, and 50+
           albums of eclectic human genius — remixed by AI.
         </p>
+      </section>
+
+      {/* Podcasts Section */}
+      <section id="podcasts" data-testid="podcast-section" className="relative z-10 px-6 py-24 md:px-12">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center">
+            <h2 className="text-3xl font-black md:text-4xl font-[family-name:var(--font-raleway)]">
+              <span className="bg-gradient-to-r from-[#c9a84c] via-[#dc2626] to-[#c9a84c] bg-clip-text text-transparent">
+                Listen. Argue. Think.
+              </span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-white/50">
+              IMHO Podcasts — because someone has to say it.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                slug: "struths-sessions",
+                title: "S\u2019Truth Sessions",
+                desc: "Weekly debates on culture, music, and the noise everyone else ignores.",
+                tag: "Culture",
+                episodes: 3,
+                gradientFrom: "#c9a84c",
+                gradientTo: "#dc2626",
+              },
+              {
+                slug: "mixed-heritage-unplugged",
+                title: "Mixed Heritage Unplugged",
+                desc: "Artists, producers, and creators talk about the music that shaped them.",
+                tag: "Music",
+                episodes: 3,
+                gradientFrom: "#a855f7",
+                gradientTo: "#ec4899",
+              },
+              {
+                slug: "signal-and-noise",
+                title: "Signal & Noise",
+                desc: "Tech, AI, and the future of creativity in a world full of bots.",
+                tag: "Tech & AI",
+                episodes: 3,
+                gradientFrom: "#22d3ee",
+                gradientTo: "#3b82f6",
+              },
+            ].map((show) => (
+              <div
+                key={show.slug}
+                data-testid="podcast-card"
+                className="group rounded-2xl border border-[#c9a84c]/10 bg-gradient-to-b from-white/[0.04] to-transparent p-6 transition hover:border-[#c9a84c]/25 hover:shadow-lg hover:shadow-[#c9a84c]/5"
+              >
+                {/* Gradient show art placeholder */}
+                <div
+                  className="mb-4 flex h-20 w-full items-center justify-center rounded-xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${show.gradientFrom}33, ${show.gradientTo}33)`,
+                    border: `1px solid ${show.gradientFrom}22`,
+                  }}
+                >
+                  <svg
+                    className="h-9 w-9"
+                    style={{ color: show.gradientFrom }}
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 1a9 9 0 00-9 9v7c0 1.1.9 2 2 2h1v-8H5v-1a7 7 0 0114 0v1h-1v8h1c1.1 0 2-.9 2-2v-7a9 9 0 00-9-9z" />
+                  </svg>
+                </div>
+                <span className="inline-block rounded-full bg-[#dc2626]/15 px-3 py-1 text-xs font-semibold text-[#dc2626]">
+                  {show.tag}
+                </span>
+                <h3 className="mt-3 text-xl font-bold text-white">{show.title}</h3>
+                <p className="mt-2 text-sm text-white/50 leading-relaxed">{show.desc}</p>
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-xs text-white/30">{show.episodes} episodes</span>
+                  <a
+                    href={`/podcasts/${show.slug}`}
+                    className="text-sm font-semibold text-[#c9a84c] transition hover:text-[#e8d5a8]"
+                  >
+                    Latest Episode &rarr;
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <a
+              href="/podcasts"
+              className="inline-block rounded-full border border-[#c9a84c]/20 px-8 py-3 text-sm font-semibold text-[#e8d5a8]/70 transition hover:border-[#c9a84c]/40 hover:text-[#e8d5a8]"
+            >
+              Browse All Podcasts &rarr;
+            </a>
+          </div>
+        </div>
       </section>
 
       {/* Now Playing / Featured Section — Jungkir-inspired cards */}
@@ -398,6 +497,14 @@ export default function Home() {
               Submit a Track
             </a>
             <span className="text-[#c9a84c]/20">|</span>
+            <a href="/podcasts" className="transition hover:text-[#c9a84c]">
+              Podcasts
+            </a>
+            <span className="text-[#c9a84c]/20">|</span>
+            <a href="/podcasts/pitch" className="transition hover:text-[#c9a84c]">
+              Pitch a Show
+            </a>
+            <span className="text-[#c9a84c]/20">|</span>
             <a href="https://wavcraft.vercel.app" target="_blank" className="transition hover:text-[#c9a84c]">
               WavCraft
             </a>
@@ -405,6 +512,9 @@ export default function Home() {
             <span>Powered by <a href="https://wavcraft.vercel.app" target="_blank" className="text-[#c9a84c] hover:text-[#e8d5a8]">WavCraft AI</a> (beta)</span>
           </div>
         </div>
+        <p className="mt-6 text-center text-xs text-white/20">
+          © 2026 IMHO Media — S&apos;Truth. Just Saying!
+        </p>
       </footer>
     </div>
   );

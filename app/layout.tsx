@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Raleway, Rubik } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from '@/auth-template/components/AuthProvider';
 
 const raleway = Raleway({ subsets: ["latin"], variable: "--font-raleway" });
 const rubik = Rubik({ subsets: ["latin"], variable: "--font-rubik" });
@@ -32,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${raleway.variable} ${rubik.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased"><AuthProvider>  {children}</AuthProvider></body>
     </html>
   );
 }
