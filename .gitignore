@@ -42,3 +42,9 @@ next-env.d.ts
 
 .vercel
 lodash/
+
+# Claude enforcement markers
+.claude/PLAN_APPROVED
+.claude/GATE_PASSED
+.claude/SCHEMA_READ
+.claude/TSC_PASSED

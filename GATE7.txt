@@ -1,0 +1,76 @@
+IMHO MEDIA — GATE 7: PRODUCT-SPECIFIC BEHAVIORAL TEST
+=======================================================
+IMHO Media is a Next.js 16 AI radio station streaming 24/7 AI-generated
+music, hosting three podcast series, and accepting indie artist track
+submissions via a form that POSTs to /api/submit.
+Verification must center on the live-stream toggle, podcast discovery,
+and track submission flow — not static build health.
+
+This file is read by RELEASE_GATE.txt Gate 7.
+Every check below must PASS before IMHO Media can be called done.
+
+===================================================================
+SECTION A: NAVIGATION — ALL TOP-LEVEL ROUTES
+===================================================================
+
+  [ ] / (home) loads                          → data-testid="app-root" present
+  [ ] /podcasts loads                         → podcast list renders, filter tags visible
+  [ ] /podcasts/[slug] loads                  → individual show page with episodes
+  [ ] /podcasts/pitch loads                   → pitch-a-show form present
+  [ ] /submit loads                           → track submission form present
+  [ ] /admin loads (redirects if unauthed)    → either admin UI or login redirect
+  [ ] /auth/login loads                       → login form visible
+  [ ] Nav links resolve without 404           → Listen, About, Genres, Podcasts, Submit
+
+===================================================================
+SECTION B: LIVE STREAM — THE CORE PRODUCT
+===================================================================
+
+  [ ] Home page loads with "Listen Now" button    → data-testid="play-pause-btn" or data-testid="hero-play-btn"
+  [ ] Clicking "Listen Now" / play button         → button text changes to "Pause" / "Now Playing"
+  [ ] WaveformBars animation visible while playing → waveform-bar elements present in DOM
+  [ ] LIVE 24/7 badge visible on hero             → "Live 24/7" text present
+  [ ] Stream URL is configured                    → https://stream.radio.co/s2317d93eb/listen present in source
+  [ ] Pause button stops playback                 → button text returns to "Listen Now"
+
+===================================================================
+SECTION C: PODCASTS — DISCOVERY AND PLAYBACK
+===================================================================
+
+  [ ] /podcasts shows all three series            → S'Truth Sessions, Mixed Heritage Unplugged, Signal & Noise visible
+  [ ] Filter by tag (Culture, Music, Tech & AI)   → list narrows correctly
+  [ ] Search box filters shows by name            → typing partial title reduces visible cards
+  [ ] Podcast card links to /podcasts/[slug]      → "Latest Episode →" navigates correctly
+  [ ] Featured episodes section renders           → at least one featured episode card visible
+  [ ] Email subscribe form present                → input[type=email] and submit button present
+  [ ] /podcasts/pitch — pitch form renders        → show title, description, host name inputs present
+
+===================================================================
+SECTION D: TRACK SUBMISSION FORM
+===================================================================
+
+  [ ] /submit — form renders all 5 fields         → Artist Name, Track Title, Genre, Track Link, Email
+  [ ] Genre dropdown populated                    → Soul/R&B, Jazz, Reggae, Latin, Hip-Hop, Pop, etc. options present
+  [ ] Submit with empty fields shows validation   → required fields prevented from blank submit
+  [ ] Successful submission shows confirmation    → "Thank You" or success state visible after submit
+  [ ] Form POSTs to /api/submit                   → network request to /api/submit on form submit
+
+===================================================================
+SECTION E: THE MANDATORY PERSISTENCE & AUTH TEST
+===================================================================
+
+  [ ] Admin route /admin with no session          → redirects to /auth/login or shows login prompt
+  [ ] Login with valid credentials                → redirects to /admin dashboard
+  [ ] Admin podcast list visible after login      → /admin/podcasts lists existing shows
+  [ ] Log out → session cleared                   → accessing /admin redirects to login again
+  [ ] Podcast data persists across page refresh   → hard refresh on /podcasts still shows all 3 series
+
+===================================================================
+WHAT CLAUDE IS NOT ALLOWED TO SUBSTITUTE FOR THIS TEST
+===================================================================
+
+  - "tsc passed"           → NOT A PRODUCT TEST
+  - "build succeeded"      → NOT A PRODUCT TEST
+  - "component renders"    → NOT A PRODUCT TEST
+  - "API returns 200"      → NOT A PRODUCT TEST
+  - Only the full end-to-end flows above count as PASS.
