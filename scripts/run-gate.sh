@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # ============================================================
 # run-gate.sh — Agyeman Enterprises Universal Release Gate
-# Blocks terminal. Sends results to ntfy. Polls for approval.
-# Only releases control when Akua types APPROVE.
+# Blocks terminal. Sends results to alrtme. Polls for approval.
+# Only releases control when Akua taps APPROVE on her phone.
 # Any other response = hard stop with her instructions shown.
 # ============================================================
 
 set -uo pipefail
 
-NTFY_TOPIC="isaalia"
-NTFY_URL="https://ntfy.sh"
-GATE_PASSED_FILE=".claude/GATE_PASSED"
+ALRTME_API_KEY="${ALRTME_API_KEY:-d13e8dec-cf04-4e79-a046-711990271acd}"
+ALRTME_URL="https://alrtme.co"
+GATE_CERT_FILE=".claude/GATE_CERT.json"   # signed artifact — written by server, verified by CI
 PLAN_APPROVED_FILE=".claude/PLAN_APPROVED"
 APP_NAME=$(basename "$PWD")
 TIMESTAMP=$(date +%s)
@@ -18,6 +18,14 @@ GATE2_PID=""
 OVERALL="PASS"
 RESULTS=""
 PORT=3000
+
+# ── Git context (bound into the signed cert) ────────────────
+GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+GIT_REMOTE=$(git remote get-url origin 2>/dev/null || echo "unknown")
+# Normalise remote → "owner/repo" (handles https and ssh remotes)
+GIT_REPO=$(echo "$GIT_REMOTE" | sed -E 's|.*[:/]([^/]+/[^/]+?)(\.git)?$|\1|')
+GATE_TYPE="${GATE_TYPE:-RELEASE}"
 
 # ── Colors ──────────────────────────────────────────────────
 RED='\033[0;31m'
@@ -51,6 +59,9 @@ mkdir -p .claude
 log "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 log "${CYAN}  RELEASE GATE — ${APP_NAME}${NC}"
 log "${CYAN}  $(date)${NC}"
+log "${CYAN}  Repo:   ${GIT_REPO}${NC}"
+log "${CYAN}  Branch: ${GIT_BRANCH}${NC}"
+log "${CYAN}  SHA:    ${GIT_SHA:0:12}${NC}"
 log "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
 # 1. PLAN_APPROVED must exist
@@ -267,7 +278,19 @@ else
   log "${RED}$(echo "$TSC_OUT" | head -20)${NC}"
 fi
 
-ESLINT_OUT=$(npx eslint src/ --max-warnings=0 2>&1)
+# Ensure .eslintignore exists so --ignore-path doesn't error
+if [ ! -f ".eslintignore" ]; then
+  cat > .eslintignore << 'ESLINTIGNORE'
+.next/
+node_modules/
+dist/
+out/
+public/
+ESLINTIGNORE
+  log "  ${YELLOW}[auto-created] .eslintignore with default exclusions${NC}"
+fi
+
+ESLINT_OUT=$(npx eslint . --ext .ts,.tsx,.js,.jsx --ignore-path .eslintignore --max-warnings=0 2>&1)
 ESLINT_EXIT=$?
 if [ $ESLINT_EXIT -eq 0 ]; then
   pass "Gate 1b — eslint: 0 errors, 0 warnings"
@@ -554,93 +577,100 @@ fi
 log "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
 # ============================================================
-# NTFY NOTIFICATION
+# ALRTME NOTIFICATION — two-way push → Approve / Reject
 # ============================================================
 
-if [ "$OVERALL" = "PASS" ]; then
-  NTFY_TITLE="✅ ${APP_NAME} — All Gates PASS — Awaiting approval"
-  NTFY_PRIORITY="default"
-  NTFY_TAGS="white_check_mark"
-else
-  NTFY_TITLE="❌ ${APP_NAME} — Gate FAILURES — Action required"
-  NTFY_PRIORITY="high"
-  NTFY_TAGS="x,rotating_light"
+RESULTS_ESCAPED=$(echo -e "$RESULTS" | head -60)
+
+RESULTS_JSON=$(echo -e "$RESULTS_ESCAPED" | node -e "
+const chunks = []; process.stdin.on('data', c => chunks.push(c));
+process.stdin.on('end', () => { process.stdout.write(JSON.stringify(chunks.join(''))); });
+" 2>/dev/null || echo '""')
+
+GATE_RESP=$(curl -s -X POST "${ALRTME_URL}/api/gate-request" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"api_key\": \"${ALRTME_API_KEY}\",
+    \"app_name\": \"${APP_NAME}\",
+    \"verdict\": \"${OVERALL}\",
+    \"results\": ${RESULTS_JSON},
+    \"repo\": \"${GIT_REPO}\",
+    \"branch\": \"${GIT_BRANCH}\",
+    \"sha\": \"${GIT_SHA}\",
+    \"gate_type\": \"${GATE_TYPE}\"
+  }" 2>/dev/null || echo '{}')
+
+GATE_TOKEN=$(echo "$GATE_RESP" | node -e "
+const chunks = []; process.stdin.on('data', c => chunks.push(c));
+process.stdin.on('end', () => {
+  try {
+    const d = JSON.parse(chunks.join(''));
+    process.stdout.write(d.token || '');
+  } catch(e) {}
+});
+" 2>/dev/null || true)
+
+if [ -z "$GATE_TOKEN" ]; then
+  log "${RED}⚠️  alrtme notification failed (no token returned). Response: ${GATE_RESP}${NC}"
+  log "${YELLOW}   Falling back — enter APPROVE manually to continue:${NC}"
+  read -r MANUAL_RESPONSE
+  GATE_TOKEN="manual"
 fi
 
-NTFY_BODY="App: ${APP_NAME}
-Date: $(date)
-Verdict: ${OVERALL}
-
-$(echo -e "$RESULTS")
----
-Reply APPROVE to release, or type your instructions to reject."
-
-curl -s \
-  -H "Title: ${NTFY_TITLE}" \
-  -H "Priority: ${NTFY_PRIORITY}" \
-  -H "Tags: ${NTFY_TAGS}" \
-  -d "${NTFY_BODY}" \
-  "${NTFY_URL}/${NTFY_TOPIC}" > /dev/null
-
-log "📱 Notification sent to ntfy.sh/${NTFY_TOPIC}"
-log "⏳ TERMINAL BLOCKED — Waiting for your response...\n"
-log "   Reply ${GREEN}APPROVE${NC} to continue"
-log "   Reply anything else = rejection instructions Claude Code must follow\n"
+log "📱 Push notification sent via alrtme"
+log "⏳ TERMINAL BLOCKED — Tap Approve or Reject on your phone...\n"
+log "   Token: ${CYAN}${GATE_TOKEN}${NC}"
+log "   Poll: ${ALRTME_URL}/api/respond/${GATE_TOKEN}\n"
 
 # ============================================================
-# POLL FOR RESPONSE — BLOCKS UNTIL AKUA RESPONDS
+# POLL FOR RESPONSE — BLOCKS UNTIL AKUA TAPS APPROVE/REJECT
 # ============================================================
 
 RESPONSE=""
-LAST_POLL_SINCE=$TIMESTAMP
 
-while true; do
-  sleep 5
+if [ "$GATE_TOKEN" = "manual" ]; then
+  RESPONSE="${MANUAL_RESPONSE}"
+else
+  POLL_START=$(date +%s)
+  while true; do
+    sleep 5
 
-  # ntfy returns newline-delimited JSON — each line is one message
-  RAW=$(curl -sf "${NTFY_URL}/${NTFY_TOPIC}/json?since=${LAST_POLL_SINCE}&poll=1" 2>/dev/null || true)
+    POLL_RESP=$(curl -s "${ALRTME_URL}/api/respond/${GATE_TOKEN}" 2>/dev/null || echo '{}')
 
-  if [ -n "$RAW" ]; then
-    # Process each line — take the last valid message
-    while IFS= read -r line; do
-      if [ -n "$line" ]; then
-        MSG=$(echo "$line" | node -e "
+    # Check for expiry
+    EXPIRED=$(echo "$POLL_RESP" | node -e "
+const chunks = []; process.stdin.on('data', c => chunks.push(c));
+process.stdin.on('end', () => {
+  try { const d = JSON.parse(chunks.join('')); process.stdout.write(d.expired ? 'true' : ''); } catch(e) {}
+});
+" 2>/dev/null || true)
+
+    if [ "$EXPIRED" = "true" ]; then
+      log "${RED}⏰ Gate token expired (2-hour window). Re-run gates to send a fresh notification.${NC}"
+      exit 1
+    fi
+
+    RESPONSE=$(echo "$POLL_RESP" | node -e "
 const chunks = []; process.stdin.on('data', c => chunks.push(c));
 process.stdin.on('end', () => {
   try {
     const d = JSON.parse(chunks.join(''));
-    if (d.event === 'message') process.stdout.write(d.message || '');
+    process.stdout.write(d.response || '');
   } catch(e) {}
 });
 " 2>/dev/null || true)
-        if [ -n "$MSG" ]; then
-          RESPONSE="$MSG"
-          NEW_TIME=$(echo "$line" | node -e "
-const chunks = []; process.stdin.on('data', c => chunks.push(c));
-process.stdin.on('end', () => {
-  try {
-    const d = JSON.parse(chunks.join(''));
-    process.stdout.write(String(d.time || ''));
-  } catch(e) {}
-});
-
-" 2>/dev/null || true)
-          [ -n "$NEW_TIME" ] && LAST_POLL_SINCE=$NEW_TIME
-        fi
-      fi
-    done <<< "$RAW"
 
     if [ -n "$RESPONSE" ]; then
       break
     fi
-  fi
 
-  # Progress indicator every 60s
-  ELAPSED=$(( $(date +%s) - TIMESTAMP ))
-  if [ $((ELAPSED % 60)) -lt 5 ] && [ $ELAPSED -gt 10 ]; then
-    log "  Still waiting... (${ELAPSED}s). Reply APPROVE or rejection instructions on ntfy.sh/${NTFY_TOPIC}"
-  fi
-done
+    # Progress indicator every 60s
+    ELAPSED=$(( $(date +%s) - POLL_START ))
+    if [ $((ELAPSED % 60)) -lt 5 ] && [ $ELAPSED -gt 10 ]; then
+      log "  Still waiting... (${ELAPSED}s elapsed). Check alrtme notification on your phone."
+    fi
+  done
+fi
 
 log "\n📨 Response received from Akua:\n"
 log "  \"${RESPONSE}\"\n"
@@ -649,25 +679,67 @@ log "  \"${RESPONSE}\"\n"
 # PROCESS RESPONSE
 # ============================================================
 
+# alrtme returns exact lowercase "approve" or "reject" — manual fallback is still normalized
 RESPONSE_NORMALIZED=$(echo "$RESPONSE" | tr '[:upper:]' '[:lower:]' | xargs)
 
 if [ "$RESPONSE_NORMALIZED" = "approve" ]; then
-  echo "gate_passed $(date)" > "$GATE_PASSED_FILE"
-
   log "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  log "${GREEN}  ✅ APPROVED — Gate passed. Control released.${NC}"
-  log "${GREEN}  Proceed to next phase.${NC}"
+  log "${GREEN}  ✅ APPROVED — Issuing signed gate certificate...${NC}"
   log "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+
+  # Request signed cert from alrtme — only the server can produce a valid sig
+  CERT_RESP=$(curl -s -X POST "${ALRTME_URL}/api/gate-certify" \
+    -H "Content-Type: application/json" \
+    -d "{\"token\": \"${GATE_TOKEN}\"}" 2>/dev/null || echo '{}')
+
+  CERT_ERROR=$(echo "$CERT_RESP" | node -e "
+const c=[]; process.stdin.on('data',d=>c.push(d));
+process.stdin.on('end',()=>{try{const d=JSON.parse(c.join(''));process.stdout.write(d.error||'');}catch(e){}});
+" 2>/dev/null || true)
+
+  if [ -n "$CERT_ERROR" ]; then
+    log "${RED}⛔ Gate cert issuance failed: ${CERT_ERROR}${NC}"
+    log "   The approval was received but the cert could not be issued."
+    log "   Contact support or re-run gates."
+    exit 1
+  fi
+
+  CERT_JSON=$(echo "$CERT_RESP" | node -e "
+const c=[]; process.stdin.on('data',d=>c.push(d));
+process.stdin.on('end',()=>{
+  try{
+    const d=JSON.parse(c.join(''));
+    if(d.cert) process.stdout.write(JSON.stringify(d.cert,null,2));
+  }catch(e){}
+});
+" 2>/dev/null || true)
+
+  if [ -z "$CERT_JSON" ]; then
+    log "${RED}⛔ Gate cert issuance returned empty cert.${NC}"
+    exit 1
+  fi
+
+  mkdir -p .claude
+  echo "$CERT_JSON" > "$GATE_CERT_FILE"
+
+  log "${GREEN}  📜 Signed cert written to ${GATE_CERT_FILE}${NC}"
+  log "${GREEN}  Repo:      ${GIT_REPO}${NC}"
+  log "${GREEN}  Branch:    ${GIT_BRANCH}${NC}"
+  log "${GREEN}  SHA:       ${GIT_SHA:0:12}${NC}"
+  log "${GREEN}  Gate type: ${GATE_TYPE}${NC}"
+  log ""
+  log "${GREEN}  CI will verify this cert before allowing merge.${NC}"
+  log "${GREEN}  Proceed to next phase.${NC}\n"
   exit 0
+
 else
-  rm -f "$GATE_PASSED_FILE"
+  rm -f "$GATE_CERT_FILE"
 
   log "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   log "${RED}  ⛔ REJECTED — DO NOT PROCEED${NC}"
   log "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-  log "${YELLOW}  Instructions from Akua:${NC}"
-  log "  ${YELLOW}${RESPONSE}${NC}\n"
-  log "  Fix every issue listed above."
+  log "${YELLOW}  Akua rejected this gate via alrtme.${NC}"
+  log "  Review the gate failures above. Fix every failing check."
   log "  Then re-run from the beginning: ${CYAN}bash scripts/run-gate.sh${NC}"
   log "  DO NOT write new code until this gate passes.\n"
   exit 1
